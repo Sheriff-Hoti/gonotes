@@ -1,23 +1,15 @@
+import { Shapeshift } from "@/components/shapeshift/Shapeshift";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import "./index.css";
 
 function App() {
-
-
   return (
-    <>
-      <main className="container bg-amber-100">
-        <h1 className="text-3xl font-bold underline">
-          Hello world!
-        </h1>
-      </main>
-
-      <hr className="footer-divider"/>
-      <footer className="footer">
-
-      </footer>
-
-
-    </>
-  )
+    <TooltipProvider>
+      <Shapeshift />
+      <Toaster />
+    </TooltipProvider>
+  );
 }
 
-export default App
+export default App;

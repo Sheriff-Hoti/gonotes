@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import wails from "@wailsio/runtime/plugins/vite";
 import tailwindcss from '@tailwindcss/vite'
+import path from "node:path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,6 +10,15 @@ export default defineConfig({
     host: "127.0.0.1",
     port: Number(process.env.WAILS_VITE_PORT) || 9245,
     strictPort: true,
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "src"),
+    },
+  },
+  // Some CJS deps (e.g. convert-units) reference Node's `global`.
+  define: {
+    global: "globalThis",
   },
   plugins: [react(), wails("./bindings"), tailwindcss()],
 });

@@ -2,6 +2,12 @@
 
 Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
 
+## Attribution
+
+The morphing-input UI in `frontend/src/{components,hooks,lib}` is ported from
+[anishfn/shapeshift](https://github.com/anishfn/shapeshift) (MIT), running in
+offline-only mode (online Jev classification removed).
+
 ## Getting Started
 
 1. Navigate to your project directory in the terminal.
