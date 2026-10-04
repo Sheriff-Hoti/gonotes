@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=gonotes
+Exec=gonotes
+Icon=gonotes
+Categories=Development;
+Terminal=false
+Keywords=wails
+Version=1.0
+StartupNotify=false
