@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
     /* Neon-night design tokens. */
     --ink: #06070f;            /* darkest base behind the image */
