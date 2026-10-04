@@ -328,10 +328,8 @@ type NoteData struct {
 // Persistence (savedItems)
 // ---------------------------------------------------------------------------
 
-// SavedItem is one completed card. CreatedAt is epoch milliseconds, matching
-// the frontend store.
 type SavedItem struct {
-	ID        int64      `json:"id"`
+	ID        string     `json:"id"`
 	Intent    CardIntent `json:"intent"`
 	Summary   string     `json:"summary"`
 	Text      string     `json:"text"`
