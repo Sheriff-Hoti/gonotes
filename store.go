@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
+	"uuid"
 )
 
 // Store persists completed cards. FileStore is the current implementation;
@@ -89,10 +91,12 @@ func (s *FileStore) read() ([]SavedItem, error) {
 
 // write assumes mu is held. Atomic via temp file + rename.
 func (s *FileStore) write(items []SavedItem) error {
-	raw, err := json.MarshalIndent(items, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+	enc := jsontext.NewEncoder(&buf, jsontext.WithIndent("  "))
+	if err := json.MarshalEncode(enc, items); err != nil {
 		return fmt.Errorf("notes store: encode: %w", err)
 	}
+	raw := append(buf.Bytes(), '\n')
 	tmp, err := os.CreateTemp(filepath.Dir(s.path), "notes-*.json")
 	if err != nil {
 		return fmt.Errorf("notes store: temp file: %w", err)
@@ -141,11 +145,7 @@ func (s *FileStore) Save(item SavedItem) (SavedItem, error) {
 		return SavedItem{}, err
 	}
 	if item.ID == "" {
-		id, err := uuid.NewV7()
-		if err != nil {
-			return SavedItem{}, fmt.Errorf("notes store: new id: %w", err)
-		}
-		item.ID = id.String()
+		item.ID = uuid.NewV7().String()
 		item.CreatedAt = time.Now().UnixMilli()
 		items = append(items, item)
 	} else {
