@@ -2,7 +2,6 @@
 import { AnimatePresence, motion, MotionConfig, useReducedMotion, useSpring } from "motion/react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { registry } from "@/components/intents/registry";
-import { useDemoScript } from "@/hooks/useDemoScript";
 import { useIntent } from "@/hooks/useIntent";
 import { activeIntent, type DecideMemory, decide, force, initialMemory, promote } from "@/lib/decide";
 import type { CardIntent, IntentResult } from "@/lib/jev/types";
@@ -34,7 +33,7 @@ function useSearchFlags() {
   );
   return useMemo(() => {
     const p = new URLSearchParams(search);
-    return { debug: p.get("debug") === "1", demo: p.get("demo") === "1", loop: p.get("loop") === "1" };
+    return { debug: p.get("debug") === "1" };
   }, [search]);
 }
 
@@ -258,13 +257,6 @@ export function Shapeshift() {
     });
   }, []);
 
-  useDemoScript(flags.demo, flags.loop, {
-    getText: () => inputRef.current?.value ?? "",
-    setText: (t) => setText(t),
-    complete,
-    clear: reset,
-  });
-
   // Focus the input on load, and whenever "/" is pressed elsewhere on the page.
   useEffect(() => {
     inputRef.current?.focus();
@@ -336,7 +328,7 @@ export function Shapeshift() {
           </AnimatePresence>
         </MorphContainer>
 
-        <FirstRunHint show={!intent && ui.kind !== "choose" && saved.length === 0 && !flags.demo} />
+        <FirstRunHint show={!intent && ui.kind !== "choose" && saved.length === 0} />
 
         <IntentChips
           options={ui.kind === "choose" ? ui.options : null}
@@ -356,7 +348,7 @@ export function Shapeshift() {
       </main>
 
       <IntentPalette open={paletteOpen} onOpenChange={setPaletteOpen} onPick={pick} />
-      <LatencyHud {...hud} large={flags.demo} />
+      <LatencyHud {...hud} />
       {flags.debug && <DebugPanel result={result} mem={mem} gated={gated} />}
     </MotionConfig>
   );

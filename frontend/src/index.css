@@ -258,10 +258,6 @@
   cursor: grabbing;
 }
 
-body.demo-idle,
-body.demo-idle * {
-  cursor: none !important;
-}
 /*
    ---break---
    */
