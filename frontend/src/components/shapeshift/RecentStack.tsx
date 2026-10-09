@@ -15,7 +15,7 @@ export function RecentStack({
 }: {
   items: SavedItem[];
   /** The row arriving from the shell via the shared layoutId; it flies instead of fading. */
-  flyingId: number | null;
+  flyingId: string | null;
   onOpen: (item: SavedItem) => void;
   onDelete: (item: SavedItem) => void;
 }) {

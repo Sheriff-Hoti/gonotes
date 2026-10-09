@@ -21,7 +21,7 @@ import { IntentPalette } from "./IntentPalette";
 import { LatencyHud } from "./LatencyHud";
 import { MorphContainer } from "./MorphContainer";
 import { RecentStack } from "./RecentStack";
-import { newId, type SavedItem, savedItems } from "@/lib/savedItems";
+import { newDraftKey, type SavedItem, savedItems } from "@/lib/savedItems";
 import { notify } from "@/lib/notify";
 
 const subscribeNoop = () => () => {};
@@ -56,7 +56,7 @@ function IntentCard<K extends CardIntent>(props: {
   readiness: ReturnType<typeof useSpring>;
   ghost: boolean;
   editing: boolean;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<unknown>;
 }) {
   const { intent, text, signals } = props;
   const data = useMemo(() => parseFor(intent, text, { colorMood: signals.colorMood }), [intent, text, signals.colorMood]);
@@ -77,11 +77,11 @@ export function Shapeshift() {
   const [chip, setChip] = useState(0);
   const saved = useSyncExternalStore(savedItems.subscribe, savedItems.getSnapshot, savedItems.getServerSnapshot);
   // The saved item currently reopened in the shell; its row is hidden while you edit.
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   // The saved row currently flying out of the shell (shared layoutId), so it skips its fade-in.
-  const [flyingId, setFlyingId] = useState<number | null>(null);
-  // Not rendered until a card exists, so a client-only id is hydration-safe.
-  const [draftId, setDraftId] = useState(newId);
+  const [flyingId, setFlyingId] = useState<string | null>(null);
+  // Client-only animation key for the unsaved draft (never persisted; Go owns IDs).
+  const [draftKey, setDraftKey] = useState(newDraftKey);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [announcement, setAnnouncement] = useState("");
 
@@ -124,40 +124,45 @@ export function Shapeshift() {
     if (editingId !== null) {
       setFlyingId(editingId);
       setEditingId(null);
-      setDraftId(newId());
+      setDraftKey(newDraftKey());
     }
   };
 
-  const complete = (): boolean => {
+  const complete = async (): Promise<boolean> => {
     const target: CardIntent | null =
       ui.kind === "committed" || ui.kind === "ghost" ? ui.intent : ui.kind === "choose" ? ui.options[chip] : null;
     if (!target || !text.trim()) return false;
-    const { summary } = derive(target, text, gated);
-    if (editingId !== null) {
-      // Save edits in place, keeping the item's position in the list.
-      savedItems.update((list) => list.map((x) => (x.id === editingId ? { ...x, intent: target, summary, text } : x)));
-      setAnnouncement(`Updated ${registry[target].label.toLowerCase()}: ${summary}`);
-    } else {
-      const item: SavedItem = { id: draftId, intent: target, summary, text, createdAt: Date.now() };
-      savedItems.update((list) => (flags.demo ? [item, ...list].slice(0, 9) : [item, ...list])); // demo list is in-memory
-      setAnnouncement(`Added ${registry[target].label.toLowerCase()}: ${summary}`);
+    const currentText = text;
+    const { summary } = derive(target, currentText, gated);
+    try {
+      if (editingId !== null) {
+        // Save edits in place, keeping the item's position in the list.
+        const stored = await savedItems.update(editingId, { intent: target, summary, text: currentText });
+        setFlyingId(stored.id);
+        setAnnouncement(`Updated ${registry[target].label.toLowerCase()}: ${summary}`);
+      } else {
+        const stored = await savedItems.create({ intent: target, summary, text: currentText });
+        setFlyingId(stored.id);
+        setAnnouncement(`Added ${registry[target].label.toLowerCase()}: ${summary}`);
+      }
+    } catch {
+      notify(`Couldn't save ${registry[target].label.toLowerCase()}`, { lead: "Save failed" });
+      return false;
     }
-    setFlyingId(editingId ?? draftId);
     // Saving with the button (or a card control) keeps you in flow: focus returns to the input.
     requestAnimationFrame(() => inputRef.current?.focus());
     setEditingId(null);
     setText("");
     setMem(initialMemory);
     setGated(neutralGated);
-    setDraftId(newId());
+    setDraftKey(newDraftKey());
     return true;
   };
 
   // Reopen a completed card: it flies back into the shell (shared layoutId) with its text.
-  const reopen = (item: SavedItem) => {
-    complete(); // file away whatever is being drafted instead of discarding it
+  const reopen = async (item: SavedItem) => {
+    await complete(); // file away whatever is being drafted instead of discarding it
     setEditingId(item.id);
-    setDraftId(item.id);
     setText(item.text);
     setMem(force(item.intent, item.text));
     setGated(neutralGated);
@@ -169,22 +174,26 @@ export function Shapeshift() {
   };
 
   // The only way an item leaves the list. Undo is offered for 6s (hover pauses it).
-  const remove = (item: SavedItem) => {
-    const index = savedItems.getSnapshot().findIndex((x) => x.id === item.id);
-    savedItems.update((list) => list.filter((x) => x.id !== item.id));
+  const remove = async (item: SavedItem) => {
+    const snapshot = savedItems.getSnapshot();
+    const index = snapshot.findIndex((x) => x.id === item.id);
+    try {
+      await savedItems.remove(item.id);
+    } catch {
+      notify(`Couldn't delete ${registry[item.intent].label.toLowerCase()}`, { lead: "Delete failed" });
+      return;
+    }
     setAnnouncement(`Deleted ${registry[item.intent].label.toLowerCase()}: ${item.summary}`);
     notify(item.summary, {
       lead: "Deleted",
       id: "deleted",
       action: {
         label: "Undo",
-        onClick: () =>
-          savedItems.update((list) => {
-            if (list.some((x) => x.id === item.id)) return list;
-            const next = [...list];
-            next.splice(Math.min(index, next.length), 0, item);
-            return next;
-          }),
+        onClick: () => {
+          void savedItems.restoreAt(item, index).catch(() => {
+            notify(`Couldn't restore ${registry[item.intent].label.toLowerCase()}`, { lead: "Restore failed" });
+          });
+        },
       },
     });
   };
@@ -230,7 +239,7 @@ export function Shapeshift() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (ui.kind === "choose") pick(ui.options[chip]);
-      else complete();
+      else void complete();
     } else if (e.key === "Escape") {
       e.preventDefault();
       reset();
@@ -245,6 +254,11 @@ export function Shapeshift() {
 
   useEffect(() => {
     savedItems.setEphemeral(flags.demo);
+    if (!flags.demo) {
+      void savedItems.refresh().catch(() => {
+        notify("Couldn't load saved cards", { lead: "Load failed" });
+      });
+    }
   }, [flags.demo]);
 
   useDemoScript(flags.demo, flags.loop, {
@@ -308,8 +322,8 @@ export function Shapeshift() {
           <AnimatePresence initial={false} mode="popLayout">
             {intent && (
               <motion.div
-                key={`card-${draftId}`}
-                layoutId={reduce ? undefined : `item-${draftId}`}
+                key={`card-${editingId ?? draftKey}`}
+                layoutId={reduce ? undefined : `item-${editingId ?? draftKey}`}
                 initial={reduce ? { opacity: 0 } : { opacity: 0, filter: "blur(4px)" }}
                 animate={{ opacity: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, transition: tween.exit }}

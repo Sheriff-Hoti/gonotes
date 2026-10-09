@@ -22,7 +22,7 @@ export type DemoApi = {
   getText: () => string;
   setText: (t: string) => void;
   /** Complete the current card; returns false if there's nothing to complete. */
-  complete: () => boolean;
+  complete: () => boolean | Promise<boolean>;
   clear: () => void;
 };
 
@@ -68,9 +68,9 @@ export function useDemoScript(enabled: boolean, loop: boolean, api: DemoApi) {
             await type(step.then);
           }
           await sleep(1400, signal);
-          if (!apiRef.current.complete()) {
+          if (!(await apiRef.current.complete())) {
             await sleep(600, signal);
-            if (!apiRef.current.complete()) apiRef.current.clear();
+            if (!(await apiRef.current.complete())) apiRef.current.clear();
           }
           await sleep(750, signal);
         }

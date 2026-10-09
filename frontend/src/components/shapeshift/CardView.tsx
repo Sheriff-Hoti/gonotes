@@ -21,7 +21,7 @@ type Props<K extends CardIntent> = {
   ghost: boolean;
   /** Reopened from the saved list: Enter saves, Esc cancels. */
   editing?: boolean;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<unknown>;
 };
 
 export function CardView<K extends CardIntent>({ intent, data, signals, readiness, ghost, editing, onConfirm }: Props<K>) {
