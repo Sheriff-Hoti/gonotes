@@ -253,13 +253,10 @@ export function Shapeshift() {
   };
 
   useEffect(() => {
-    savedItems.setEphemeral(flags.demo);
-    if (!flags.demo) {
-      void savedItems.refresh().catch(() => {
-        notify("Couldn't load saved cards", { lead: "Load failed" });
-      });
-    }
-  }, [flags.demo]);
+    void savedItems.refresh().catch(() => {
+      notify("Couldn't load saved cards", { lead: "Load failed" });
+    });
+  }, []);
 
   useDemoScript(flags.demo, flags.loop, {
     getText: () => inputRef.current?.value ?? "",
