@@ -29,11 +29,14 @@ export function EventCard({ data, signals, interactive }: CardProps<EventData>) 
 
       <Field index={1} className="flex flex-wrap items-center gap-2">
         <Popover>
-          <PopoverTrigger asChild disabled={!interactive}>
-            <button type="button" aria-label={when ? `Date: ${when.day}. Change date` : "Add date"} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-              {when ? <Chip icon={CalendarDays}>{when.day}</Chip> : <Placeholder>Add date</Placeholder>}
-            </button>
-          </PopoverTrigger>
+          <PopoverTrigger
+            disabled={!interactive}
+            render={
+              <button type="button" aria-label={when ? `Date: ${when.day}. Change date` : "Add date"} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                {when ? <Chip icon={CalendarDays}>{when.day}</Chip> : <Placeholder>Add date</Placeholder>}
+              </button>
+            }
+          />
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar mode="single" selected={date ?? undefined} onSelect={(d) => d && setOverride(withTime(d, date))} />
           </PopoverContent>

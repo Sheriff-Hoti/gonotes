@@ -34,9 +34,9 @@ export function HabitCard({ data, interactive }: CardProps<HabitData>) {
       </Field>
       <Field index={1}>
         <ToggleGroup
-          type="multiple"
+          multiple
           value={value}
-          onValueChange={setDays}
+          onValueChange={(v: string[]) => setDays(v)}
           disabled={!interactive}
           className="flex-wrap gap-1.5"
           aria-label="Days of the week"

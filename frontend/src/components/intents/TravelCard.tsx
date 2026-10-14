@@ -42,18 +42,21 @@ export function TravelCard({ data, signals, interactive }: CardProps<TravelData>
       </Field>
       <Field index={1}>
         <Popover>
-          <PopoverTrigger asChild disabled={!interactive}>
-            <button type="button" aria-label={from ? "Change dates" : "Add dates"} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-              {from ? (
-                <Chip icon={CalendarRange}>
-                  {short(from)}
-                  {to && to.getTime() !== from.getTime() ? ` – ${short(to)}` : ""}
-                </Chip>
-              ) : (
-                <Placeholder>Add dates</Placeholder>
-              )}
-            </button>
-          </PopoverTrigger>
+          <PopoverTrigger
+            disabled={!interactive}
+            render={
+              <button type="button" aria-label={from ? "Change dates" : "Add dates"} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                {from ? (
+                  <Chip icon={CalendarRange}>
+                    {short(from)}
+                    {to && to.getTime() !== from.getTime() ? ` – ${short(to)}` : ""}
+                  </Chip>
+                ) : (
+                  <Placeholder>Add dates</Placeholder>
+                )}
+              </button>
+            }
+          />
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar mode="range" selected={{ from, to }} onSelect={setRange} numberOfMonths={1} />
           </PopoverContent>

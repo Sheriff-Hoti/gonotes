@@ -36,7 +36,7 @@ export function ConvertCard({ data, interactive }: CardProps<ConvertData>) {
   const options = unitOptions(from);
 
   const unitSelect = (value: string, onChange: (v: string) => void, label: string) => (
-    <Select value={value} onValueChange={onChange} disabled={!interactive}>
+    <Select value={value} onValueChange={(v: string | null) => v && onChange(v)} disabled={!interactive}>
       <SelectTrigger size="sm" aria-label={label} className="h-7 w-fit gap-1 border-none bg-secondary px-2.5 text-[13px] font-medium text-ink-2 shadow-none">
         <SelectValue />
       </SelectTrigger>

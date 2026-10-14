@@ -88,7 +88,7 @@ export function ColorPicker({ data, interactive }: CardProps<ColorData>) {
           max={96}
           step={1}
           value={[Math.round((lightness ?? baseL) * 100)]}
-          onValueChange={([v]) => setLightness(v / 100)}
+          onValueChange={(v) => setLightness((Array.isArray(v) ? v[0] : v) / 100)}
           aria-label="Lightness"
         />
       </Field>
