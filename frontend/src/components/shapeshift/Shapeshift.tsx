@@ -2,6 +2,7 @@
 import { AnimatePresence, motion, MotionConfig, useReducedMotion, useSpring } from "motion/react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { registry } from "@/components/intents/registry";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { useIntent } from "@/hooks/useIntent";
 import { activeIntent, type DecideMemory, decide, force, initialMemory, promote } from "@/lib/decide";
 import type { CardIntent, IntentResult } from "@/lib/jev/types";
@@ -277,35 +278,37 @@ export function Shapeshift() {
       <main id="main" className="mx-auto w-full max-w-[560px] px-4 pt-[14vh] pb-24 sm:px-0 sm:pt-[22vh]">
         <h1 className="sr-only">Shapeshift</h1>
         <MorphContainer readiness={readiness} edge={ghost ? null : (meta?.edge ?? null)}>
-          <motion.div layout="position" className="relative flex h-[72px] items-center px-5">
-            <input
-              ref={inputRef}
-              value={text}
-              onChange={(e) => {
-                const v = e.target.value;
-                setText(v);
-                if (!v.trim()) {
-                  setMem(initialMemory);
-                  setGated(neutralGated);
-                }
-              }}
-              onKeyDown={onKeyDown}
-              aria-label="Type anything"
-              aria-describedby="shapeshift-hint"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="done"
-              className="relative z-[1] h-8 w-full bg-transparent pe-6 text-[22px] leading-8 font-[450] tracking-[-0.01em] text-foreground caret-brand outline-none"
-            />
-            {text === "" && <CyclingPlaceholder />}
-            <span
-              aria-hidden
-              className={cn(
-                "absolute end-5 size-1.5 rounded-full bg-brand transition-opacity duration-300 ease-out",
-                status === "thinking" ? "opacity-60" : "opacity-0",
-              )}
-            />
+          <motion.div layout="position">
+            <InputGroup className="h-[72px] px-5">
+              <InputGroupInput
+                ref={inputRef}
+                value={text}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setText(v);
+                  if (!v.trim()) {
+                    setMem(initialMemory);
+                    setGated(neutralGated);
+                  }
+                }}
+                onKeyDown={onKeyDown}
+                aria-label="Type anything"
+                aria-describedby="shapeshift-hint"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                className="relative z-[1] pe-6 text-[22px] leading-8 font-[450] tracking-[-0.01em] caret-brand md:text-[22px]"
+              />
+              {text === "" && <CyclingPlaceholder />}
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute end-5 size-1.5 rounded-full bg-brand transition-opacity duration-300 ease-out",
+                  status === "thinking" ? "opacity-60" : "opacity-0",
+                )}
+              />
+            </InputGroup>
           </motion.div>
 
           <AnimatePresence initial={false} mode="popLayout">

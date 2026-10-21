@@ -28,7 +28,7 @@ export function MorphContainer({
         layoutId="shell"
         transition={reduce ? tween.fade : spring.morph}
         style={{ borderRadius: 28 }}
-        className="group/shell relative overflow-hidden border border-border bg-card shadow-[var(--shadow-rest)] outline-0 outline-brand-soft transition-[border-color,outline-width] duration-150 ease-out focus-within:border-brand focus-within:outline-4"
+        className="relative overflow-hidden bg-card shadow-[var(--shadow-rest)]"
       >
         <motion.div
           aria-hidden
