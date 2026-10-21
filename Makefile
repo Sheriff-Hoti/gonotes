@@ -7,7 +7,7 @@
 #   make stop              # Stop the server
 #   make clean             # Clean venv and cached data
 
-.PHONY: venv install start health test stop clean
+.PHONY: venv install start health test shapes stop clean
 
 # Project root
 PROJECT_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
@@ -44,6 +44,10 @@ start:
 		sleep 3; \
 		if curl -s http://127.0.0.1:8000/health > /dev/null 2>&1; then \
 			echo "   Server ready on http://127.0.0.1:8000"; \
+			if [ "$(LAYA_NO_SHAPES)" != "1" ]; then \
+				echo "   ▶️  Running wire-shape checks (LAYA_NO_SHAPES=1 to skip):"; \
+				./scripts/test-laya.sh; \
+			fi; \
 		else \
 			echo "   ⚠️  Check /tmp/laya-server.log for status"; \
 		fi; \
@@ -61,6 +65,11 @@ test:
 		-X POST \
 		-H 'content-type: application/json' \
 		-d '{"state":{"body":"We were billed twice for March. Please refund the duplicate."},"questions":{"department":{"type":"choice","instructions":"Which department should handle this?","criteria":{"billing":"invoices, payments, refunds","technical":"bugs, outages, system errors","other":"everything else"}},"urgency":{"type":"score","instructions":"How urgent is this?","criteria":["not urgent","soon","blocking"]},"churn_risk":{"type":"noul","instructions":"Does the user threaten to cancel or leave?"}}}' | python -m json.tool || echo "❌ Request failed"
+
+# 5️⃣b Shape checks — every card intent through /v1/systemone, response shape validated
+shapes:
+	@echo "🧪 Validating /v1/systemone wire shapes (tests every card intent, plus 400/422 refusals)..."
+	@./scripts/test-laya.sh
 
 # 6️⃣ Stop the running server
 stop:
